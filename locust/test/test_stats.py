@@ -252,6 +252,18 @@ class TestStatsEntryResponseTimesCache(unittest.TestCase):
         ))
 
 
+class TestStatsEntry(unittest.TestCase):
+    def setUp(self, *args, **kwargs):
+        super(TestStatsEntry, self).setUp(*args, **kwargs)
+        self.stats = RequestStats()
+
+    def test_fail_ratio_with_failures(self):
+        s = StatsEntry(self.stats, "/", "GET")
+        s.num_requests = 10
+        s.num_failures = 5
+        self.assertAlmostEqual(s.fail_ratio, 0.5)
+
+
 class TestRequestStatsWithWebserver(WebserverTestCase):
     def test_request_stats_content_length(self):
         class MyLocust(HttpLocust):
@@ -311,7 +323,7 @@ class TestRequestStatsWithWebserver(WebserverTestCase):
         response = locust.client.get("/", timeout=0.1)
         self.assertEqual(response.status_code, 0)
         self.assertEqual(1, global_stats.get("/", "GET").num_failures)
-        self.assertEqual(0, global_stats.get("/", "GET").num_requests)
+        self.assertEqual(1, global_stats.get("/", "GET").num_requests)
 
 
 class MyTaskSet(TaskSet):

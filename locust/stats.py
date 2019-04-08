@@ -276,7 +276,7 @@ class StatsEntry(object):
     @property
     def fail_ratio(self):
         try:
-            return float(self.num_failures) / (self.num_requests + self.num_failures)
+            return float(self.num_failures) / self.num_requests
         except ZeroDivisionError:
             if self.num_failures > 0:
                 return 1.0
@@ -558,6 +558,7 @@ def on_request_success(request_type, name, response_time, response_length, **kwa
     global_stats.log_request(request_type, name, response_time, response_length)
 
 def on_request_failure(request_type, name, response_time, exception, **kwargs):
+    global_stats.log_request(request_type, name, response_time, 0)
     global_stats.log_error(request_type, name, exception)
 
 def on_report_to_master(client_id, data):
