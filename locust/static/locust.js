@@ -57,6 +57,8 @@ $('#swarm_form').submit(function(event) {
     $.post($(this).attr("action"), $(this).serialize(),
         function(response) {
             if (response.success) {
+                sessionStorage.removeItem('data');
+                cachedData = {"dates": [], "rps": [], "rt_50": [], "rt_95": [], "users": []}; // reset cachedData
                 $("body").attr("class", "hatching");
                 $("#start").fadeOut();
                 $("#status").fadeIn();
@@ -122,6 +124,8 @@ var rpsChart = new LocustLineChart($(".charts-container"), "Total Requests per S
 var responseTimeChart = new LocustLineChart($(".charts-container"), "Response Times (ms)", ["Median Response Time", "95% percentile"], "ms");
 var usersChart = new LocustLineChart($(".charts-container"), "Number of Users", ["Users"], "users");
 
+var cachedData = JSON.parse(sessionStorage.getItem('data') || '{"dates": [], "rps": [], "rt_50": [], "rt_95": [], "users": []}');
+
 function updateStats() {
     $.get('./stats/requests', function (report) {
         $("#total_rps").html(Math.round(report.total_rps*100)/100);
@@ -156,11 +160,35 @@ function updateStats() {
             rpsChart.addValue([total.current_rps]);
             responseTimeChart.addValue([report.current_response_time_percentile_50, report.current_response_time_percentile_95]);
             usersChart.addValue([report.user_count]);
+
+            cachedData.dates.push(new Date().toLocaleTimeString());
+            cachedData.rps.push(total.current_rps);
+            cachedData.rt_50.push(report.current_response_time_percentile_50);
+            cachedData.rt_95.push(report.current_response_time_percentile_95);
+            cachedData.users.push(report.user_count);
+            if (cachedData.dates.length > 50000) {
+                cachedData.dates.shift();
+                cachedData.rps.shift();
+                cachedData.rt_50.shift();
+                cachedData.rt_95.shift();
+                cachedData.users.shift();
+            }
+            // update session storage
+            sessionStorage.setItem('data', JSON.stringify(cachedData))
         }
 
         setTimeout(updateStats, 2000);
     });
 }
+
+// read cached data from sessionStorage
+rpsChart.dates = cachedData.dates;
+rpsChart.data = [cachedData.rps];
+responseTimeChart.dates = cachedData.dates;
+responseTimeChart.data = [cachedData.rt_50, cachedData.rt_95];
+usersChart.dates = cachedData.dates;
+usersChart.data = [cachedData.users];
+
 updateStats();
 
 function updateExceptions() {
