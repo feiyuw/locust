@@ -3,15 +3,15 @@
         /**
          * lines should be an array of line names
          */
-        constructor(container, title, lines, unit) {
+        constructor(container, title, lines) {
             this.container = $(container);
             this.title = title;
             this.lines = lines;
-            
+
             this.element = $('<div class="chart"></div>').css("width", "100%").appendTo(container);
             this.data = [];
             this.dates = [];
-            
+
             var seriesData = [];
             for (var i=0; i<lines.length; i++) {
                 seriesData.push({
@@ -23,7 +23,7 @@
                 });
                 this.data.push([]);
             }
-            
+
             this.chart = echarts.init(this.element[0], 'vintage');
             this.chart.setOption({
                 title: {
@@ -77,7 +77,7 @@
                 grid: {x:60, y:70, x2:40, y2:40},
             })
         }
-        
+
         addValue(values) {
             this.dates.push(new Date().toLocaleTimeString());
             var seriesData = [];
@@ -93,7 +93,7 @@
                 series: seriesData
             });
         }
-        
+
         resize() {
             this.chart.resize();
         }
